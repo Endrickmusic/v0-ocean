@@ -1,25 +1,18 @@
+import { useRef } from "react"
+import { useFrame } from "@react-three/fiber"
 import { Canvas } from "@react-three/fiber"
-import { Environment } from "@react-three/drei"
+import { Environment, Box } from "@react-three/drei"
+import Ocean from "./Ocean"
 
-import './index.css'
-
-import Experience from "./Experience"
-
+import "./index.css"
 
 export default function App() {
+  //Box rotate 90 degrees on the x axis
+  const boxRef = useRef()
 
- return (
-
-  
-    <Canvas shadows camera={{ position: [0, 0, 4], fov: 40 }}>
-      <Environment
-        files="./textures/envmap.hdr" />
-        <color 
-          attach="background" 
-          args={["#eeeeee"]} />
-      <Experience />
+  return (
+    <Canvas camera={{ position: [0, 20, 25], fov: 75 }}>
+      <Ocean />
     </Canvas>
-  
-  );
+  )
 }
-
