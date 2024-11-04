@@ -132,6 +132,52 @@ const oceanMaterial = new THREE.ShaderMaterial({
   `,
 })
 
+// Add debug material to visualize the heightmap
+const debugMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uHeightmap: { value: null },
+  },
+  vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+  fragmentShader: `
+      uniform sampler2D uHeightmap;
+      varying vec2 vUv;
+      
+      void main() {
+        vec4 heightData = texture2D(uHeightmap, vUv);
+        // Visualize the height data in grayscale
+        gl_FragColor = vec4(vec3(heightData.r), 1.0);
+      }
+    `,
+})
+
+// Debug plane component
+const DebugPlane = ({ heightmapTexture }) => {
+  const debugRef = useRef()
+
+  useFrame(() => {
+    if (debugRef.current) {
+      debugRef.current.material.uniforms.uHeightmap.value = heightmapTexture
+    }
+  })
+
+  return (
+    <mesh
+      ref={debugRef}
+      material={debugMaterial}
+      position={[30, 15, 0]} // Position to the right of the ocean
+      rotation={[-Math.PI * 2.2, 0, 0]}
+    >
+      <planeGeometry args={[10, 10]} />
+    </mesh>
+  )
+}
+
 const Ocean = () => {
   const meshRef = useRef()
   const { gl } = useThree()
@@ -163,7 +209,6 @@ const Ocean = () => {
     scene.add(simMesh)
   }, [scene, simMesh])
 
-  // Store current read/write FBOs
   const fbos = useRef({ read: heightmapFBO1, write: heightmapFBO2 })
 
   useFrame(({ clock }) => {
@@ -191,9 +236,12 @@ const Ocean = () => {
   })
 
   return (
-    <mesh ref={meshRef} rotation-x={-Math.PI * 0.5} material={oceanMaterial}>
-      <planeGeometry args={[50, 50, 128, 128]} />
-    </mesh>
+    <>
+      <mesh ref={meshRef} rotation-x={-Math.PI * 0.5} material={oceanMaterial}>
+        <planeGeometry args={[50, 50, 128, 128]} />
+      </mesh>
+      <DebugPlane heightmapTexture={fbos.current.read.texture} />
+    </>
   )
 }
 
